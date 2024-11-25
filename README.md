@@ -9,6 +9,7 @@ Transform your Obsidian checkboxes into expressive emojis! This plugin allows yo
 - Replace standard checkboxes with customizable emojis
 - Support for both checked and unchecked states
 - Add custom emojis to your tags (e.g., #todo 📝, #important ⭐)
+- IMPORTANT: The tag emoji changes the default emoji
 - Fully configurable emoji selections
 - Real-time preview updates when changing emoji settings
 - Automatic refresh of all notes when settings are changed
