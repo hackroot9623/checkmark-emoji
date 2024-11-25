@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
   "description": "Replace checkboxes with configurable emojis",
-  "author": "Your Name",
-  "isDesktopOnly": false
+  "author": "Hackroot",
+  "isDesktopOnly": false,
+  "js": "main.js"
 }
