@@ -2,171 +2,166 @@ import type { MarkdownPostProcessor, MarkdownPostProcessorContext } from 'obsidi
 import { MarkdownRenderChild, MarkdownView } from 'obsidian';
 import type EmojiChecklistPlugin from './main';
 
+interface EditorChange {
+    from: { line: number; ch: number };
+    to: { line: number; ch: number };
+    text: string;
+}
+
 class EmojiRenderChild extends MarkdownRenderChild {
-    private span: HTMLSpanElement;
-
-    constructor(span: HTMLSpanElement) {
+    constructor(private readonly span: HTMLSpanElement) {
         super(span);
-        this.span = span;
     }
 
-    onunload() {
-        // Optional: Add any cleanup logic if needed
+    onunload(): void {
+        // Cleanup handled by parent
     }
 }
 
-function findTagInLine(listItem: HTMLElement): string | null {
-    // Get the full text content of the list item
-    const text = listItem.textContent || '';
-    console.log('Full task text:', text);
-
-    // Look for tags in the text, ignoring any emojis at the start
-    const tagMatch = text.replace(/^[^\w\s#]*\s*/, '').match(/#(\w+)/);
-    if (tagMatch) {
-        const tag = tagMatch[1];
-        console.log('Found tag:', tag);
-        return tag;
+class CheckboxProcessor {
+    private static findTagInLine(listItem: HTMLElement): string | null {
+        const text = listItem.textContent || '';
+        const tagMatch = text.replace(/^[^\w\s#]*\s*/, '').match(/#(\w+)/);
+        return tagMatch ? tagMatch[1] : null;
     }
 
-    console.log('No tag found in text');
-    return null;
-}
-
-function getEmojisForTag(plugin: EmojiChecklistPlugin, tag: string | null, isChecked: boolean): string {
-    console.log('Getting emoji for tag:', tag, 'checked:', isChecked);
-    console.log('Available mappings:', JSON.stringify(plugin.settings.tagMappings, null, 2));
-    
-    if (tag) {
-        const mapping = plugin.settings.tagMappings.find(m => m.tag.toLowerCase() === tag.toLowerCase());
-        if (mapping) {
-            console.log('Found mapping for tag:', JSON.stringify(mapping, null, 2));
-            const emoji = isChecked ? mapping.checkedEmoji : mapping.uncheckedEmoji;
-            console.log('Using tag-specific emoji:', emoji);
-            return emoji;
-        }
-        console.log('No mapping found for tag:', tag);
-    }
-    
-    const defaultEmoji = isChecked ? plugin.settings.checkedEmoji : plugin.settings.uncheckedEmoji;
-    console.log('Using default emoji:', defaultEmoji);
-    return defaultEmoji;
-}
-
-export const processCheckboxes: MarkdownPostProcessor = function(
-    this: EmojiChecklistPlugin,
-    el: HTMLElement,
-    ctx: MarkdownPostProcessorContext
-) {
-    console.log('Processing checkboxes with settings:', JSON.stringify(this.settings, null, 2));
-    const checkboxes = el.querySelectorAll<HTMLInputElement>('li.task-list-item input[type="checkbox"]');
-    console.log('Found checkboxes:', checkboxes.length);
-
-    // Get the current view and editor
-    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-    const editor = view?.editor;
-    const sectionInfo = ctx.getSectionInfo(el);
-
-    checkboxes.forEach((checkbox, index) => {
-        if (!(checkbox instanceof HTMLInputElement)) {
-            console.log('Invalid checkbox element at index', index);
-            return;
-        }
-
-        const listItem = checkbox.closest('li.task-list-item') as HTMLElement;
-        if (!listItem) {
-            console.log('No list item found for checkbox', index);
-            return;
-        }
-
-        console.log('Processing checkbox', index, 'with HTML:', listItem.innerHTML);
-        const tag = findTagInLine(listItem);
-        console.log('Found tag for checkbox', index, ':', tag);
-        
-        const span = document.createElement('span');
-        span.className = 'task-list-emoji';
-        const emoji = getEmojisForTag(this, tag, checkbox.checked);
-        console.log('Initial emoji for checkbox', index, ':', emoji);
-        span.textContent = emoji;
-
-        // Update the note content with the correct emoji
-        if (editor && sectionInfo) {
-            const lineText = editor.getLine(sectionInfo.lineStart + index);
-            // Extract any existing emoji at the start of the line
-            const existingEmojiMatch = lineText.match(/^([^\w\s#]*)\s*/);
-            const existingEmoji = existingEmojiMatch ? existingEmojiMatch[1] : '';
-            
-            if (existingEmoji !== emoji) {
-                const newText = lineText.replace(/^[^\w\s#]*\s*/, emoji + ' ');
-                editor.transaction({
-                    changes: [{
-                        from: { line: sectionInfo.lineStart + index, ch: 0 },
-                        to: { line: sectionInfo.lineStart + index, ch: lineText.length },
-                        text: newText
-                    }]
-                });
+    private static getEmojisForTag(plugin: EmojiChecklistPlugin, tag: string | null, isChecked: boolean): string {
+        if (tag) {
+            const mapping = plugin.settings.tagMappings.find(
+                m => m.tag.toLowerCase() === tag.toLowerCase()
+            );
+            if (mapping) {
+                return isChecked ? mapping.checkedEmoji : mapping.uncheckedEmoji;
             }
         }
+        return isChecked ? plugin.settings.checkedEmoji : plugin.settings.uncheckedEmoji;
+    }
+
+    private static updateEditorContent(
+        editor: any,
+        lineIndex: number,
+        newEmoji: string
+    ): void {
+        const lineText = editor.getLine(lineIndex);
+        const newText = lineText.replace(/^[^\w\s#]*\s*/, `${newEmoji} `);
+        
+        const change: EditorChange = {
+            from: { line: lineIndex, ch: 0 },
+            to: { line: lineIndex, ch: lineText.length },
+            text: newText
+        };
+
+        editor.transaction({ changes: [change] });
+    }
+
+    private static createEmojiSpan(emoji: string): HTMLSpanElement {
+        const span = document.createElement('span');
+        span.className = 'task-list-emoji';
+        span.textContent = emoji;
+        return span;
+    }
+
+    private static styleContainer(container: HTMLElement | null): void {
+        if (container) {
+            container.style.display = 'flex';
+            container.style.alignItems = 'center';
+            container.style.gap = '0.5em';
+        }
+    }
+
+    public static processCheckbox(
+        plugin: EmojiChecklistPlugin,
+        checkbox: HTMLInputElement,
+        index: number,
+        editor: any,
+        sectionInfo: any,
+        ctx: MarkdownPostProcessorContext
+    ): void {
+        const listItem = checkbox.closest('li.task-list-item') as HTMLElement;
+        if (!listItem) return;
+
+        const tag = this.findTagInLine(listItem);
+        const emoji = this.getEmojisForTag(plugin, tag, checkbox.checked);
+        const span = this.createEmojiSpan(emoji);
+
+        if (editor && sectionInfo) {
+            this.updateEditorContent(editor, sectionInfo.lineStart + index, emoji);
+        }
+
+        this.setupEventListeners(
+            plugin,
+            checkbox,
+            span,
+            tag,
+            index,
+            editor,
+            sectionInfo,
+            ctx
+        );
+
+        this.styleContainer(checkbox.parentElement);
+        checkbox.style.display = 'none';
+        checkbox.after(span);
+    }
+
+    private static setupEventListeners(
+        plugin: EmojiChecklistPlugin,
+        checkbox: HTMLInputElement,
+        span: HTMLSpanElement,
+        tag: string | null,
+        index: number,
+        editor: any,
+        sectionInfo: any,
+        ctx: MarkdownPostProcessorContext
+    ): void {
+        const updateEmoji = (isChecked: boolean): void => {
+            const newEmoji = this.getEmojisForTag(plugin, tag, isChecked);
+            span.textContent = newEmoji;
+            
+            if (editor && sectionInfo) {
+                this.updateEditorContent(editor, sectionInfo.lineStart + index, newEmoji);
+            }
+        };
 
         span.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
 
             checkbox.checked = !checkbox.checked;
-            const newEmoji = getEmojisForTag(this, tag, checkbox.checked);
-            console.log('New emoji after click:', newEmoji);
-            span.textContent = newEmoji;
-
-            // Update the note content
-            if (editor && sectionInfo) {
-                const lineText = editor.getLine(sectionInfo.lineStart + index);
-                const newText = lineText.replace(/^[^\w\s#]*\s*/, newEmoji + ' ');
-                
-                editor.transaction({
-                    changes: [{
-                        from: { line: sectionInfo.lineStart + index, ch: 0 },
-                        to: { line: sectionInfo.lineStart + index, ch: lineText.length },
-                        text: newText
-                    }]
-                });
-            }
-
+            updateEmoji(checkbox.checked);
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
 
-            const sourcePath = ctx.sourcePath;
-            if (sourcePath) {
-                const renderChild = new EmojiRenderChild(span);
-                ctx.addChild(renderChild);
+            if (ctx.sourcePath) {
+                ctx.addChild(new EmojiRenderChild(span));
             }
         });
-
-        const container = checkbox.parentElement;
-        if (container) {
-            container.style.display = 'flex';
-            container.style.alignItems = 'center';
-            container.style.gap = '0.5em';
-        }
-
-        checkbox.style.display = 'none';
-        checkbox.after(span);
 
         checkbox.addEventListener('change', () => {
-            const newEmoji = getEmojisForTag(this, tag, checkbox.checked);
-            console.log('New emoji after change:', newEmoji);
-            span.textContent = newEmoji;
-            
-            // Update the note content
-            if (editor && sectionInfo) {
-                const lineText = editor.getLine(sectionInfo.lineStart + index);
-                const newText = lineText.replace(/^[^\w\s#]*\s*/, newEmoji + ' ');
-                
-                editor.transaction({
-                    changes: [{
-                        from: { line: sectionInfo.lineStart + index, ch: 0 },
-                        to: { line: sectionInfo.lineStart + index, ch: lineText.length },
-                        text: newText
-                    }]
-                });
-            }
+            updateEmoji(checkbox.checked);
         });
+    }
+}
+
+export const processCheckboxes: MarkdownPostProcessor = function(
+    this: EmojiChecklistPlugin,
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext
+): void {
+    const checkboxes = el.querySelectorAll<HTMLInputElement>('li.task-list-item input[type="checkbox"]');
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const editor = view?.editor;
+    const sectionInfo = ctx.getSectionInfo(el);
+
+    checkboxes.forEach((checkbox, index) => {
+        if (!(checkbox instanceof HTMLInputElement)) return;
+        
+        CheckboxProcessor.processCheckbox(
+            this,
+            checkbox,
+            index,
+            editor,
+            sectionInfo,
+            ctx
+        );
     });
 };
