@@ -1,7 +1,5 @@
 # Emoji Checklist Plugin for Obsidian
 
-**Tags**: #checkbox, #emoji, #task-management, #productivity, #customization
-
 ![drawing](https://github.com/user-attachments/assets/25794f4c-42f9-4217-a6eb-8da786bcd567)
 
 Transform your Obsidian checkboxes into expressive emojis! This plugin allows you to customize your task lists by replacing standard checkboxes with configurable emojis, making your notes more visually appealing and fun.
