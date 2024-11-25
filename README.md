@@ -1,12 +1,20 @@
 # Emoji Checklist Plugin for Obsidian
 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/hackroot23/checkmark-emoji)
+![GitHub](https://img.shields.io/github/license/hackroot23/checkmark-emoji)
+
+**Tags**: #checkbox, #emoji, #task-management, #productivity, #customization
+
 Transform your Obsidian checkboxes into expressive emojis! This plugin allows you to customize your task lists by replacing standard checkboxes with configurable emojis, making your notes more visually appealing and fun.
 
 ## Features
 
 - Replace standard checkboxes with customizable emojis
 - Support for both checked and unchecked states
+- Add custom emojis to your tags (e.g., #todo 📝, #important ⭐)
 - Fully configurable emoji selections
+- Real-time preview updates when changing emoji settings
+- Automatic refresh of all notes when settings are changed
 - Seamless integration with Obsidian's existing checkbox functionality
 - Compatible with both desktop and mobile versions of Obsidian
 
@@ -32,16 +40,19 @@ Transform your Obsidian checkboxes into expressive emojis! This plugin allows yo
 1. Create a standard Obsidian checkbox using `- [ ]` or `- [x]`
 2. The plugin will automatically convert these to your configured emojis
 3. Toggle checkboxes as usual - the emojis will update accordingly
+4. Add tags with emojis using the format `#tagname emoji` (e.g., #project 📊)
 
 ## Configuration
 
-You can customize the emojis used for different checkbox states in the plugin settings:
+You can customize the emojis used for different checkbox states and tags in the plugin settings:
 
 1. Open Obsidian Settings
 2. Navigate to the Emoji Checklist settings tab
 3. Choose your preferred emojis for:
    - Unchecked boxes
    - Checked boxes
+   - Default tag emojis
+   - Custom tag-emoji pairs
 
 ## Contributing
 
@@ -63,4 +74,4 @@ If you encounter any issues or have suggestions, please file them in the GitHub 
 
 ## Credits
 
-Created by [Your Name]
+Created by [Hackroot](https://github.com/hackroot23).
