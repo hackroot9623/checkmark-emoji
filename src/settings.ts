@@ -1,6 +1,6 @@
-import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
-import type EmojiChecklistPlugin from './main';
-import { DEFAULT_SETTINGS } from './types';
+import {App, Notice, PluginSettingTab, Setting} from 'obsidian';
+import EmojiChecklistPlugin from './main';
+import {DEFAULT_SETTINGS} from './types';
 
 export class EmojiChecklistSettingTab extends PluginSettingTab {
     plugin: EmojiChecklistPlugin;
@@ -37,6 +37,38 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
             checkedText.style.textDecoration = 'line-through';
             checkedText.style.color = 'var(--text-muted)';
 
+            // Add tag examples
+            if (this.plugin.settings.tagMappings.length > 0) {
+                const tagHeader = this.testEl.createEl('h3', { text: 'Tag Examples' });
+                tagHeader.style.marginTop = '2em';
+                tagHeader.style.marginBottom = '1em';
+
+                for (const mapping of this.plugin.settings.tagMappings) {
+                    const tagUncheckedExample = this.testEl.createEl('div', { cls: 'setting-item' });
+                    tagUncheckedExample.createEl('span', { text: `#${mapping.tag} unchecked: ` });
+                    const tagUncheckedContainer = tagUncheckedExample.createEl('span', { cls: 'task-preview' });
+                    tagUncheckedContainer.createEl('span', {
+                        text: mapping.uncheckedEmoji,
+                        cls: 'emoji-preview'
+                    });
+                    tagUncheckedContainer.createEl('span', { text: ` Sample #${mapping.tag} task` });
+
+                    const tagCheckedExample = this.testEl.createEl('div', { cls: 'setting-item' });
+                    tagCheckedExample.createEl('span', { text: `#${mapping.tag} checked: ` });
+                    const tagCheckedContainer = tagCheckedExample.createEl('span', { cls: 'task-preview' });
+                    tagCheckedContainer.createEl('span', {
+                        text: mapping.checkedEmoji,
+                        cls: 'emoji-preview'
+                    });
+                    const tagCheckedText = tagCheckedContainer.createEl('span', { text: ` Sample #${mapping.tag} task` });
+                    tagCheckedText.style.textDecoration = 'line-through';
+                    tagCheckedText.style.color = 'var(--text-muted)';
+
+                    tagUncheckedExample.style.marginBottom = '0.5em';
+                    tagCheckedExample.style.marginBottom = '0.5em';
+                }
+            }
+
             header.style.marginTop = '2em';
             header.style.marginBottom = '1em';
             uncheckedExample.style.marginBottom = '0.5em';
@@ -51,39 +83,114 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
         containerEl.createEl('h2', { text: 'Emoji Checklist Settings' });
 
         new Setting(containerEl)
-            .setName('Unchecked emoji')
-            .setDesc('Emoji to display for unchecked items')
+            .setName('Default Unchecked Emoji')
+            .setDesc('Emoji to display for unchecked tasks')
             .addText(text => text
-                .setPlaceholder('Enter emoji')
                 .setValue(this.plugin.settings.uncheckedEmoji)
                 .onChange(async (value) => {
                     this.plugin.settings.uncheckedEmoji = value;
                     await this.plugin.saveSettings();
                     this.updateTestSection();
+                    console.log('Updated default unchecked emoji:', this.plugin.settings.uncheckedEmoji);
                 }));
 
         new Setting(containerEl)
-            .setName('Checked emoji')
-            .setDesc('Emoji to display for checked items')
+            .setName('Default Checked Emoji')
+            .setDesc('Emoji to display for checked tasks')
             .addText(text => text
-                .setPlaceholder('Enter emoji')
                 .setValue(this.plugin.settings.checkedEmoji)
                 .onChange(async (value) => {
                     this.plugin.settings.checkedEmoji = value;
                     await this.plugin.saveSettings();
                     this.updateTestSection();
+                    console.log('Updated default checked emoji:', this.plugin.settings.checkedEmoji);
+                }));
+
+        containerEl.createEl('h3', { text: 'Tag Mappings' });
+
+        const tagMappingsContainer = containerEl.createDiv('tag-mappings');
+
+        // Add existing tag mappings
+        this.plugin.settings.tagMappings.forEach((mapping, index) => {
+            const mappingContainer = tagMappingsContainer.createDiv('tag-mapping');
+
+            new Setting(mappingContainer)
+                .setName(`Tag #${mapping.tag}`)
+                .addText(text => text
+                    .setPlaceholder('tag name')
+                    .setValue(mapping.tag)
+                    .onChange(async (value) => {
+                        this.plugin.settings.tagMappings[index].tag = value;
+                        await this.plugin.saveSettings();
+                        this.updateTestSection();
+                        console.log('Updated tag mapping:', this.plugin.settings.tagMappings);
+                    }))
+                .addText(text => text
+                    .setPlaceholder('unchecked emoji')
+                    .setValue(mapping.uncheckedEmoji)
+                    .onChange(async (value) => {
+                        this.plugin.settings.tagMappings[index].uncheckedEmoji = value;
+                        await this.plugin.saveSettings();
+                        this.updateTestSection();
+                        console.log('Updated tag mapping:', this.plugin.settings.tagMappings);
+                    }))
+                .addText(text => text
+                    .setPlaceholder('checked emoji')
+                    .setValue(mapping.checkedEmoji)
+                    .onChange(async (value) => {
+                        this.plugin.settings.tagMappings[index].checkedEmoji = value;
+                        await this.plugin.saveSettings();
+                        this.updateTestSection();
+                        console.log('Updated tag mapping:', this.plugin.settings.tagMappings);
+                    }))
+                .addButton(button => button
+                    .setIcon('trash')
+                    .onClick(async () => {
+                        this.plugin.settings.tagMappings.splice(index, 1);
+                        await this.plugin.saveSettings();
+                        this.display();
+                        console.log('Removed tag mapping, remaining:', this.plugin.settings.tagMappings);
+                    }));
+        });
+
+        // Add button to add new tag mapping
+        new Setting(containerEl)
+            .setName('Add Tag Mapping')
+            .setDesc('Add a new tag-emoji mapping')
+            .addButton(button => button
+                .setButtonText('Add New Tag')
+                .onClick(async () => {
+                    this.plugin.settings.tagMappings.push({
+                        tag: 'newtag',
+                        uncheckedEmoji: '⭕',
+                        checkedEmoji: '✅'
+                    });
+                    await this.plugin.saveSettings();
+                    console.log('Added new tag mapping:', this.plugin.settings.tagMappings);
+                    this.display();
                 }));
 
         new Setting(containerEl)
-            .setName('Restore defaults')
-            .setDesc('Reset all settings to their default values')
+            .setName('Reset Settings')
+            .setDesc('Restore all settings to their defaults')
             .addButton(button => button
                 .setButtonText('Restore Defaults')
                 .onClick(async () => {
                     this.plugin.settings = Object.assign({}, DEFAULT_SETTINGS);
                     await this.plugin.saveSettings();
+                    console.log('Reset settings to defaults:', this.plugin.settings);
                     this.display();
                     new Notice('Settings restored to defaults');
+                }));
+
+        // Add Apply Changes button
+        new Setting(containerEl)
+            .setName('Apply Changes')
+            .setDesc('Apply emoji changes to all open notes')
+            .addButton(button => button
+                .setButtonText('Apply Changes')
+                .onClick(() => {
+                    this.plugin.refreshAllNotes();
                 }));
 
         this.testEl = containerEl.createDiv();
