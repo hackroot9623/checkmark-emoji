@@ -52,7 +52,7 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
   - Base URL (e.g., https://your-company.atlassian.net)
   - Username (your Jira email)
   - API Token (from https://id.atlassian.com/manage-profile/security/api-tokens)
-  - Trigger Word (default: @jira)
+  - Trigger Word (default: @Jira)
 
 ## Usage
 
