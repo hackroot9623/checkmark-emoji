@@ -90,14 +90,18 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
 
 ### Inserting Jira Tasks
 1. Using Trigger Word:
-   - Type your configured trigger (default: @jira)
+   - Type your configured trigger (default: @Jira)
    - Select task from popup menu
+  ![image](https://github.com/user-attachments/assets/d32f042f-cf6c-4a34-8406-f3ec153f2024)
    - Task is inserted as Markdown link with status
 
 2. Using Command Palette:
    - Press Ctrl + P
    - Search for "Insert Jira Issue"
+  ![image](https://github.com/user-attachments/assets/0a61cb43-4094-4dec-8867-a0b974cbc000)
+
    - Select task from popup menu
+  ![image](https://github.com/user-attachments/assets/d32f042f-cf6c-4a34-8406-f3ec153f2024)
 
 ## Support
 
