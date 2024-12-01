@@ -33,11 +33,25 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
   - Configurable trigger word
 
 ## Installation
-
+### Obsidian Plugin Manager Installation
 1. Open Obsidian Settings
 2. Go to Community Plugins and disable Safe Mode
 3. Click Browse and search for "Emoji Checklist"
 4. Install the plugin and enable it
+
+### Manual Installation
+1. Download the plugin from GitHub
+2. Extract the zip file
+3. Open Obsidian Settings
+4. Go to Community Plugins and disable Safe Mode
+5. Build the project with:
+ ```shell
+   yarn run dev    
+ ```
+5. Create a folder named "obsidian-emoji-checklist" in your plugins folder
+6. Copy this three files to the folder "obsidian-emoji-checklist"
+
+7. Enable the plugin
 
 ## Configuration
 
