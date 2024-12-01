@@ -1,5 +1,7 @@
 # Emoji Checklist Plugin for Obsidian
 
+![drawing](https://github.com/user-attachments/assets/e4ae35cb-089f-4211-815e-3df6c8f4842b)
+
 An Obsidian plugin that enhances your task lists with customizable emojis and Jira integration.
 
 ## Features
