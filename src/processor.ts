@@ -1,5 +1,5 @@
-import type { MarkdownPostProcessor, MarkdownPostProcessorContext } from 'obsidian';
-import { MarkdownRenderChild, MarkdownView } from 'obsidian';
+import type {MarkdownPostProcessor, MarkdownPostProcessorContext} from 'obsidian';
+import {MarkdownRenderChild, MarkdownView} from 'obsidian';
 import type EmojiChecklistPlugin from './main';
 
 interface EditorChange {
@@ -18,23 +18,28 @@ class EmojiRenderChild extends MarkdownRenderChild {
     }
 }
 
-class CheckboxProcessor {
+export class CheckboxProcessor {
     private static findTagInLine(listItem: HTMLElement): string | null {
         const text = listItem.textContent || '';
         const tagMatch = text.replace(/^[^\w\s#]*\s*/, '').match(/#(\w+)/);
         return tagMatch ? tagMatch[1] : null;
     }
 
-    private static getEmojisForTag(plugin: EmojiChecklistPlugin, tag: string | null, isChecked: boolean): string {
-        if (tag) {
-            const mapping = plugin.settings.tagMappings.find(
-                m => m.tag.toLowerCase() === tag.toLowerCase()
-            );
-            if (mapping) {
-                return isChecked ? mapping.checkedEmoji : mapping.uncheckedEmoji;
-            }
+    private static getEmojisForTag(
+        plugin: EmojiChecklistPlugin,
+        tag: string | null,
+        isChecked: boolean
+    ): string {
+        if (!tag) {
+            return isChecked ? plugin.settings.checkedEmoji : plugin.settings.uncheckedEmoji;
         }
-        return isChecked ? plugin.settings.checkedEmoji : plugin.settings.uncheckedEmoji;
+
+        const mapping = plugin.settings.tagMappings.find((m) => m.tag === tag);
+        if (!mapping) {
+            return isChecked ? plugin.settings.checkedEmoji : plugin.settings.uncheckedEmoji;
+        }
+
+        return isChecked ? mapping.checkedEmoji : mapping.uncheckedEmoji;
     }
 
     private static updateEditorContent(
@@ -44,7 +49,7 @@ class CheckboxProcessor {
     ): void {
         const lineText = editor.getLine(lineIndex);
         const newText = lineText.replace(/^[^\w\s#]*\s*/, `${newEmoji} `);
-        
+
         const change: EditorChange = {
             from: { line: lineIndex, ch: 0 },
             to: { line: lineIndex, ch: lineText.length },
@@ -69,14 +74,57 @@ class CheckboxProcessor {
         }
     }
 
-    public static processCheckbox(
+    private static setupEventListeners(
+        plugin: EmojiChecklistPlugin,
+        checkbox: HTMLInputElement,
+        span: HTMLSpanElement,
+        tag: string | null,
+        index: number,
+        editor: any,
+        sectionInfo: any,
+        ctx: MarkdownPostProcessorContext
+    ): void {
+        const updateEmoji = (isChecked: boolean): void => {
+            const newEmoji = this.getEmojisForTag(plugin, tag, isChecked);
+            span.textContent = newEmoji;
+
+            if (editor && sectionInfo) {
+                this.updateEditorContent(editor, sectionInfo.lineStart + index, newEmoji);
+            }
+        };
+
+        const toggleCheckbox = async () => {
+            checkbox.checked = !checkbox.checked;
+            updateEmoji(checkbox.checked);
+
+            // Create and dispatch both change and click events
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            checkbox.dispatchEvent(new Event('click', { bubbles: true }));
+
+            if (ctx.sourcePath) {
+                ctx.addChild(new EmojiRenderChild(span));
+            }
+        };
+
+        span.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            await toggleCheckbox();
+        });
+
+        checkbox.addEventListener('change', () => {
+            updateEmoji(checkbox.checked);
+        });
+    }
+
+    public static async processCheckbox(
         plugin: EmojiChecklistPlugin,
         checkbox: HTMLInputElement,
         index: number,
         editor: any,
-        sectionInfo: any,   
+        sectionInfo: any,
         ctx: MarkdownPostProcessorContext
-    ): void {
+    ): Promise<void> {
         const listItem = checkbox.closest('li.task-list-item') as HTMLElement;
         if (!listItem) return;
 
@@ -103,49 +151,6 @@ class CheckboxProcessor {
         checkbox.style.display = 'none';
         checkbox.after(span);
     }
-
-    private static setupEventListeners(
-        plugin: EmojiChecklistPlugin,
-        checkbox: HTMLInputElement,
-        span: HTMLSpanElement,
-        tag: string | null,
-        index: number,
-        editor: any,
-        sectionInfo: any,
-        ctx: MarkdownPostProcessorContext
-    ): void {
-        const updateEmoji = (isChecked: boolean): void => {
-            const newEmoji = this.getEmojisForTag(plugin, tag, isChecked);
-            span.textContent = newEmoji;
-            
-            if (editor && sectionInfo) {
-                this.updateEditorContent(editor, sectionInfo.lineStart + index, newEmoji);
-            }
-        };
-
-        const toggleCheckbox = async () => {
-            checkbox.checked = !checkbox.checked;
-            updateEmoji(checkbox.checked);
-            
-            // Create and dispatch both change and click events
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-            checkbox.dispatchEvent(new Event('click', { bubbles: true }));
-
-            if (ctx.sourcePath) {
-                ctx.addChild(new EmojiRenderChild(span));
-            }
-        };
-
-        span.addEventListener('click', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            await toggleCheckbox();
-        });
-
-        checkbox.addEventListener('change', () => {
-            updateEmoji(checkbox.checked);
-        });
-    }
 }
 
 export const processCheckboxes: MarkdownPostProcessor = function(
@@ -160,7 +165,7 @@ export const processCheckboxes: MarkdownPostProcessor = function(
 
     checkboxes.forEach((checkbox, index) => {
         if (!(checkbox instanceof HTMLInputElement)) return;
-        
+
         CheckboxProcessor.processCheckbox(
             this,
             checkbox,
