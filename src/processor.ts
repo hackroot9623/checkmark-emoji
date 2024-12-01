@@ -63,9 +63,9 @@ class CheckboxProcessor {
 
     private static styleContainer(container: HTMLElement | null): void {
         if (container) {
-            container.style.display = 'flex';
-            container.style.alignItems = 'center';
-            container.style.gap = '0.5em';
+            container.style.display = 'inline-block';
+            container.style.verticalAlign = 'top';
+            container.style.marginRight = '0.5em';
         }
     }
 
@@ -74,7 +74,7 @@ class CheckboxProcessor {
         checkbox: HTMLInputElement,
         index: number,
         editor: any,
-        sectionInfo: any,
+        sectionInfo: any,   
         ctx: MarkdownPostProcessorContext
     ): void {
         const listItem = checkbox.closest('li.task-list-item') as HTMLElement;
@@ -123,17 +123,23 @@ class CheckboxProcessor {
             }
         };
 
-        span.addEventListener('click', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
+        const toggleCheckbox = async () => {
             checkbox.checked = !checkbox.checked;
             updateEmoji(checkbox.checked);
+            
+            // Create and dispatch both change and click events
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            checkbox.dispatchEvent(new Event('click', { bubbles: true }));
 
             if (ctx.sourcePath) {
                 ctx.addChild(new EmojiRenderChild(span));
             }
+        };
+
+        span.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            await toggleCheckbox();
         });
 
         checkbox.addEventListener('change', () => {
