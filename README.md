@@ -1,75 +1,93 @@
 # Emoji Checklist Plugin for Obsidian
 
-![drawing](https://github.com/user-attachments/assets/25794f4c-42f9-4217-a6eb-8da786bcd567)
-
-Transform your Obsidian checkboxes into expressive emojis! This plugin allows you to customize your task lists by replacing standard checkboxes with configurable emojis, making your notes more visually appealing and fun.
+An Obsidian plugin that enhances your task lists with customizable emojis and Jira integration.
 
 ## Features
 
+### Custom Emoji Checkboxes
 - Replace standard checkboxes with customizable emojis
-- Support for both checked and unchecked states
-- Add custom emojis to your tags (e.g., #todo 📝, #important ⭐)
-- IMPORTANT: The tag emoji changes the default emoji
-- Fully configurable emoji selections
-- Real-time preview updates when changing emoji settings
-- Automatic refresh of all notes when settings are changed
-- Seamless integration with Obsidian's existing checkbox functionality
-- Compatible with both desktop and mobile versions of Obsidian
+- Default emojis: ✅ for checked and ⬜️ for unchecked tasks
+- Configurable through settings
+
+### Tag-Based Emoji Mapping
+- Define different emoji pairs for specific tags
+  - Example: #important ⭐/✨ (unchecked/checked)
+  - Example: #bug 🐛/🔨 (unchecked/checked)
+  - Example: #idea 💡/✅ (unchecked/checked)
+  - Example: #urgent 🚨/✔️ (unchecked/checked)
+- Automatically applies different emoji styles based on task tags
+- Customize both checked and unchecked states per tag
+
+### Jira Integration
+- Seamlessly insert Jira tasks into your notes
+- Two ways to add tasks:
+  1. Type `@Jira` (or your configured trigger word) to open task selector
+  2. Use the command palette: "Insert Jira Issue"
+- Features:
+  - Shows tasks assigned to you
+  - Displays task key, summary, and status
+  - Inserts tasks as Markdown links with status
+  - Direct links to Jira issues
+  - Configurable trigger word
 
 ## Installation
 
-### From Obsidian Community Plugins
-
 1. Open Obsidian Settings
-2. Navigate to Community Plugins
-3. Search for "Emoji Checklist"
-4. Click Install
-5. Enable the plugin
-
-### Manual Installation
-
-1. Download the latest release from the releases page
-2. Extract the files to your `.obsidian/plugins/emoji-checklist` folder
-3. Reload Obsidian
-4. Enable the plugin in Community Plugins settings
-
-## Usage
-
-1. Create a standard Obsidian checkbox using `- [ ]` or `- [x]`
-2. The plugin will automatically convert these to your configured emojis
-3. Toggle checkboxes as usual - the emojis will update accordingly
-4. Add tags with emojis using the format `#tagname emoji` (e.g., #project 📊)
+2. Go to Community Plugins and disable Safe Mode
+3. Click Browse and search for "Emoji Checklist"
+4. Install the plugin and enable it
 
 ## Configuration
 
-You can customize the emojis used for different checkbox states and tags in the plugin settings:
+### Emoji Settings
+- Set default emoji for checked tasks
+- Set default emoji for unchecked tasks
+- Configure tag-specific emoji mappings
 
-1. Open Obsidian Settings
-2. Navigate to the Emoji Checklist settings tab
-3. Choose your preferred emojis for:
-   - Unchecked boxes
-   - Checked boxes
-   - Default tag emojis
-   - Custom tag-emoji pairs
+### Jira Settings
+- Enable/Disable Jira integration
+- Configure Jira connection:
+  - Base URL (e.g., https://your-company.atlassian.net)
+  - Username (your Jira email)
+  - API Token (from https://id.atlassian.com/manage-profile/security/api-tokens)
+  - Trigger Word (default: @jira)
 
-## Contributing
+## Usage
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Basic Task Lists
+- Create normal markdown task lists
+- Plugin automatically replaces checkboxes with configured emojis
+- Example:
+  ```markdown
+  - [ ] Unchecked task (shows ⬜️)
+  - [x] Checked task (shows ✅)
+  ```
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+### Tag-Based Tasks
+- Add tags to tasks for specific emoji styles
+- Example:
+  ```markdown
+  - [ ] #important Task with custom emoji
+  ```
 
-## License
+### Inserting Jira Tasks
+1. Using Trigger Word:
+   - Type your configured trigger (default: @jira)
+   - Select task from popup menu
+   - Task is inserted as Markdown link with status
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+2. Using Command Palette:
+   - Press Ctrl + P
+   - Search for "Insert Jira Issue"
+   - Select task from popup menu
 
 ## Support
 
-If you encounter any issues or have suggestions, please file them in the GitHub issues section.
+If you encounter any issues or have suggestions, please:
+1. Check the plugin settings are correctly configured
+2. For Jira issues, verify your API token and connection settings
+3. Submit issues on our GitHub repository
 
-## Credits
+## License
 
-Created by [Hackroot]([https://github.com/hackroot23](https://github.com/hackroot9623)).
+MIT License - see LICENSE file for details
