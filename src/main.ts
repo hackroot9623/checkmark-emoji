@@ -12,7 +12,7 @@ declare module 'obsidian' {
         previewMode: MarkdownPreviewView;
         editor: Editor;
     }
-}
+}   
 
 export default class EmojiChecklistPlugin extends Plugin {
     settings: EmojiChecklistSettings;
