@@ -94,6 +94,8 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
    - Select task from popup menu
   ![image](https://github.com/user-attachments/assets/d32f042f-cf6c-4a34-8406-f3ec153f2024)
    - Task is inserted as Markdown link with status
+  ![image](https://github.com/user-attachments/assets/e41a24c4-5501-4340-bb81-d43167a694c6)
+
 
 2. Using Command Palette:
    - Press Ctrl + P
