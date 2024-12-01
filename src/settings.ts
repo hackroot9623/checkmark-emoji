@@ -183,6 +183,63 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
                     new Notice('Settings restored to defaults');
                 }));
 
+        // Jira Settings
+        containerEl.createEl('h3', { text: 'Jira Integration' });
+
+        new Setting(containerEl)
+            .setName('Enable Jira Integration')
+            .setDesc('Enable or disable Jira integration')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.jiraSettings.enabled)
+                .onChange(async (value) => {
+                    this.plugin.settings.jiraSettings.enabled = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Trigger Word')
+            .setDesc('Word that triggers Jira task insertion (e.g., @jira)')
+            .addText(text => text
+                .setPlaceholder('@jira')
+                .setValue(this.plugin.settings.jiraSettings.triggerWord)
+                .onChange(async (value) => {
+                    this.plugin.settings.jiraSettings.triggerWord = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Jira Base URL')
+            .setDesc('Your Jira instance URL (e.g., https://your-domain.atlassian.net)')
+            .addText(text => text
+                .setPlaceholder('https://your-domain.atlassian.net')
+                .setValue(this.plugin.settings.jiraSettings.baseUrl)
+                .onChange(async (value) => {
+                    this.plugin.settings.jiraSettings.baseUrl = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Username')
+            .setDesc('Your Jira email address')
+            .addText(text => text
+                .setPlaceholder('email@example.com')
+                .setValue(this.plugin.settings.jiraSettings.username)
+                .onChange(async (value) => {
+                    this.plugin.settings.jiraSettings.username = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('API Token')
+            .setDesc('Your Jira API token (from https://id.atlassian.com/manage-profile/security/api-tokens)')
+            .addText(text => text
+                .setPlaceholder('Enter your API token')
+                .setValue(this.plugin.settings.jiraSettings.apiToken)
+                .onChange(async (value) => {
+                    this.plugin.settings.jiraSettings.apiToken = value;
+                    await this.plugin.saveSettings();
+                }));
+
         // Add Apply Changes button
         new Setting(containerEl)
             .setName('Apply Changes')
