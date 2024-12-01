@@ -49,9 +49,11 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
    yarn run dev    
  ```
 5. Create a folder named "obsidian-emoji-checklist" in your plugins folder
-6. Copy this three files to the folder "obsidian-emoji-checklist"
+6. Copy this three files to the folder "obsidian-emoji-checklist".
+
 ![image](https://github.com/user-attachments/assets/276ad2af-2837-4592-b1bd-f2b3f2f78848)
-7. Enable the plugin
+
+8. Enable the plugin
 
 ## Configuration
 
