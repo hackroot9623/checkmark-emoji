@@ -32,6 +32,20 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
   - Direct links to Jira issues
   - Configurable trigger word
 
+### Report Generation
+- Generate formatted reports from your task lists
+- Features:
+  - Automatically formats selected tasks with emojis
+  - Tag-specific emoji support (e.g., #stopper tasks use 🛑)
+  - Adds 📅 to dates for better visibility
+  - Organizes tasks into sections (regular tasks and stoppers)
+  - Copies formatted content to clipboard
+- Perfect for:
+  - Daily standups
+  - Progress reports
+  - Task summaries
+  - Team updates
+
 ## Installation
 ### Obsidian Plugin Manager Installation
 1. Open Obsidian Settings
