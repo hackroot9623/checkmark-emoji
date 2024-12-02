@@ -60,6 +60,115 @@ export default class EmojiChecklistPlugin extends Plugin {
 
         this.registerMarkdownPostProcessor(processCheckboxes.bind(this));
         this.addSettingTab(new EmojiChecklistSettingTab(this.app, this));
+
+        // Register the editor menu command
+        this.registerEvent(
+            this.app.workspace.on('editor-menu', (menu, editor) => {
+                if (editor.getSelection()) {
+                    menu.addItem((item) => {
+                        item
+                            .setTitle('Copy as Formatted Report')
+                            .setIcon('clipboard-copy')
+                            .onClick(() => this.formatAndCopyToClipboard(editor));
+                    });
+                }
+            })
+        );
+    }
+
+    private formatAndCopyToClipboard(editor: Editor) {
+        const selectedText = editor.getSelection();
+        if (!selectedText) {
+            new Notice('No text selected');
+            return;
+        }
+
+        if (!this.settings.reportSettings.enabled) {
+            new Notice('Report feature is disabled in settings');
+            return;
+        }
+
+        // Helper function to get the appropriate emoji based on tag and checked status
+        const getEmoji = (line: string, isChecked: boolean): string => {
+            for (const mapping of this.settings.tagMappings) {
+                if (line.toLowerCase().includes(`#${mapping.tag.toLowerCase()}`)) {
+                    return isChecked ? mapping.checkedEmoji : mapping.uncheckedEmoji;
+                }
+            }
+            return isChecked ? this.settings.checkedEmoji : this.settings.uncheckedEmoji;
+        };
+
+        // Parse the selected text to find tasks and stoppers
+        const lines = selectedText.split('\n');
+        const processLine = (line: string) => {
+            line = line.trim();
+            if (line.startsWith('- [x]')) {
+                return line.replace('- [x]', getEmoji(line, true));
+            } else if (line.startsWith('- [ ]')) {
+                return line.replace('- [ ]', getEmoji(line, false));
+            }
+            return line;
+        };
+
+        const tasks = lines
+            .filter(line => line.trim().length > 0)
+            .map(processLine);
+
+        const stoppers = lines
+            .filter(line => line.toLowerCase().includes('#stopper'))
+            .map(processLine);
+
+        // Get today's date
+        const today = new Date().toLocaleDateString('en-US', { 
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Build the content based on enabled sections
+        const contentParts: string[] = [];
+
+        for (const section of this.settings.reportSettings.sections) {
+            if (!section.enabled) continue;
+
+            // Add section header if enabled
+            if (this.settings.reportSettings.showHeaders && section.showHeader) {
+                contentParts.push(`### ${section.name}`);
+            }
+
+            // Add section content
+            let sectionContent = section.content;
+            switch (section.name) {
+                case 'DATE':
+                    sectionContent = `📅 ${today}`;
+                    break;
+                case 'BODY':
+                    sectionContent = tasks
+                        .filter(task => !task.toLowerCase().includes('#stopper'))
+                        .join('\n');
+                    break;
+                case 'STOPPERS':
+                    sectionContent = stoppers.join('\n');
+                    break;
+            }
+
+            if (sectionContent) {
+                contentParts.push(sectionContent);
+                contentParts.push(''); // Add empty line after section
+            }
+        }
+
+        const formattedContent = contentParts.join('\n');
+
+        // Copy to clipboard
+        navigator.clipboard.writeText(formattedContent)
+            .then(() => {
+                new Notice('Formatted content copied to clipboard');
+            })
+            .catch(() => {
+                new Notice('Failed to copy to clipboard');
+            });
     }
 
     private async insertJiraIssue(view: MarkdownView) {
@@ -139,8 +248,8 @@ export default class EmojiChecklistPlugin extends Plugin {
                     console.log('Task selected:', selectedTask);
                     const editor = activeView.editor;
                     const cursor = editor.getCursor();
-                    const currentLine = editor.getLine(cursor.line);
                     const triggerWord = this.settings.jiraSettings.triggerWord;
+                    const currentLine = editor.getLine(cursor.line);
 
                     // Remove the trigger word and replace with the task
                     const newLine = currentLine.slice(0, cursor.ch - triggerWord.length) +

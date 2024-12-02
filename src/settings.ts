@@ -153,7 +153,7 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
                     }));
         });
 
-        // Add button to add new tag mapping
+        // Button to add new tag mapping
         new Setting(containerEl)
             .setName('Add Tag Mapping')
             .setDesc('Add a new tag-emoji mapping')
@@ -238,6 +238,79 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.jiraSettings.apiToken = value;
                     await this.plugin.saveSettings();
+                }));
+
+        // Report Settings
+        containerEl.createEl('h2', {text: 'Report Settings'});
+
+        new Setting(containerEl)
+            .setName('Enable Report Feature')
+            .setDesc('Enable/disable the report formatting feature')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.reportSettings.enabled)
+                .onChange(async (value) => {
+                    this.plugin.settings.reportSettings.enabled = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Show Section Headers')
+            .setDesc('Show/hide section headers in the report')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.reportSettings.showHeaders)
+                .onChange(async (value) => {
+                    this.plugin.settings.reportSettings.showHeaders = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        // Section Settings
+        containerEl.createEl('h3', {text: 'Report Sections'});
+
+        for (let i = 0; i < this.plugin.settings.reportSettings.sections.length; i++) {
+            const section = this.plugin.settings.reportSettings.sections[i];
+            const sectionContainer = containerEl.createDiv();
+            sectionContainer.addClass('report-section-settings');
+
+            new Setting(sectionContainer)
+                .setName(`Section: ${section.name}`)
+                .setDesc('Configure this section')
+                .addToggle(toggle => toggle
+                    .setValue(section.enabled)
+                    .onChange(async (value) => {
+                        section.enabled = value;
+                        await this.plugin.saveSettings();
+                    }))
+                .addToggle(toggle => toggle
+                    .setTooltip('Show section header')
+                    .setValue(section.showHeader)
+                    .onChange(async (value) => {
+                        section.showHeader = value;
+                        await this.plugin.saveSettings();
+                    }))
+                .addText(text => text
+                    .setPlaceholder('Section content')
+                    .setValue(section.content)
+                    .onChange(async (value) => {
+                        section.content = value;
+                        await this.plugin.saveSettings();
+                    }));
+        }
+
+        // Add New Section Button
+        new Setting(containerEl)
+            .setName('Add New Section')
+            .setDesc('Add a new section to the report')
+            .addButton(button => button
+                .setButtonText('Add Section')
+                .onClick(async () => {
+                    this.plugin.settings.reportSettings.sections.push({
+                        name: 'New Section',
+                        content: '',
+                        enabled: true,
+                        showHeader: true
+                    });
+                    await this.plugin.saveSettings();
+                    this.display();
                 }));
 
         // Add Apply Changes button
