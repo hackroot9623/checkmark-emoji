@@ -12,11 +12,25 @@ export interface JiraSettings {
     triggerWord: string;
 }
 
+export interface ReportSection {
+    name: string;
+    content: string;
+    enabled: boolean;
+    showHeader: boolean;
+}
+
+export interface ReportSettings {
+    enabled: boolean;
+    sections: ReportSection[];
+    showHeaders: boolean;
+}
+
 export interface EmojiChecklistSettings {
     checkedEmoji: string;
     uncheckedEmoji: string;
     tagMappings: TagEmojiMapping[];
     jiraSettings: JiraSettings;
+    reportSettings: ReportSettings;
 }
 
 export const DEFAULT_SETTINGS: EmojiChecklistSettings = {
@@ -34,6 +48,36 @@ export const DEFAULT_SETTINGS: EmojiChecklistSettings = {
         baseUrl: '',
         username: '',
         apiToken: '',
-        triggerWord: '@Jira'
+        triggerWord: '@jira'
+    },
+    reportSettings: {
+        enabled: true,
+        showHeaders: true,
+        sections: [
+            {
+                name: 'GREETINGS',
+                content: 'Good Morning everyone',
+                enabled: true,
+                showHeader: true
+            },
+            {
+                name: 'DATE',
+                content: '',
+                enabled: true,
+                showHeader: false
+            },
+            {
+                name: 'BODY',
+                content: '',
+                enabled: true,
+                showHeader: true
+            },
+            {
+                name: 'STOPPERS',
+                content: '',
+                enabled: true,
+                showHeader: true
+            }
+        ]
     }
 };
