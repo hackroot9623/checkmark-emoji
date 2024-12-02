@@ -33,6 +33,8 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
   - Configurable trigger word
 
 ### Report Generation
+![image](https://github.com/user-attachments/assets/7b1ded63-ca6f-437a-821e-e287866864ef)
+
 - Generate formatted reports from your task lists
 - Features:
   - Automatically formats selected tasks with emojis
