@@ -1,8 +1,8 @@
-# Emoji Checklist Plugin for Obsidian
+# Task Master Plugin for Obsidian
 
 ![drawing](https://github.com/user-attachments/assets/e4ae35cb-089f-4211-815e-3df6c8f4842b)
 
-An Obsidian plugin that enhances your task lists with customizable emojis and Jira integration.
+An Obsidian plugin that enhances your task lists with customizable emojis, Jira integration, and Git merge request support.
 
 ## Features
 
@@ -52,7 +52,7 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
 ### Obsidian Plugin Manager Installation
 1. Open Obsidian Settings
 2. Go to Community Plugins and disable Safe Mode
-3. Click Browse and search for "Emoji Checklist"
+3. Click Browse and search for "Task Master"
 4. Install the plugin and enable it
 
 ### Manual Installation
@@ -64,8 +64,8 @@ An Obsidian plugin that enhances your task lists with customizable emojis and Ji
  ```shell
    yarn run dev    
  ```
-5. Create a folder named "obsidian-emoji-checklist" in your plugins folder
-6. Copy this three files to the folder "obsidian-emoji-checklist".
+5. Create a folder named "obsidian-task-master" in your plugins folder
+6. Copy this three files to the folder "obsidian-task-master".
 
 ![image](https://github.com/user-attachments/assets/276ad2af-2837-4592-b1bd-f2b3f2f78848)
 

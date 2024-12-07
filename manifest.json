@@ -1,6 +1,6 @@
 {
-  "id": "emoji-checklist",
-  "name": "Emoji Checklist",
+  "id": "task-master",
+  "name": "Task Master",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
   "description": "Replace checkboxes with configurable emojis and integrate with GitLab/GitHub merge requests",
