@@ -1,14 +1,23 @@
 {
   "name": "obsidian-emoji-checklist",
   "version": "1.0.0",
-  "description": "Replace checkboxes with configurable emojis in Obsidian",
+  "description": "Replace checkboxes with configurable emojis and integrate with GitLab/GitHub merge requests in Obsidian",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
-  "keywords": ["obsidian", "plugin"],
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "checklist",
+    "emoji",
+    "gitlab",
+    "github",
+    "merge-requests",
+    "pull-requests"
+  ],
   "author": "Hackroot",
   "license": "MIT",
   "devDependencies": {
