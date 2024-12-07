@@ -1,10 +1,12 @@
-import {Editor, MarkdownPreviewView, MarkdownView, Notice, Plugin} from 'obsidian';
+import {Editor, MarkdownPreviewView, MarkdownView, Notice, Plugin, Modal, Menu, SuggestModal, App} from 'obsidian';
 import type {EmojiChecklistSettings} from './types';
 import {DEFAULT_SETTINGS} from './types';
 import {EmojiChecklistSettingTab} from './settings';
 import {processCheckboxes} from './processor';
 import {JiraClient} from './jira';
 import {JiraTaskSuggester} from './suggester';
+import {GitIntegration} from './git';
+import {GitMergeRequestSuggester, GitMergeRequest} from './gitSuggester';
 
 // Augment the MarkdownView type from Obsidian
 declare module 'obsidian' {
@@ -72,6 +74,67 @@ export default class EmojiChecklistPlugin extends Plugin {
                             .onClick(() => this.formatAndCopyToClipboard(editor));
                     });
                 }
+            })
+        );
+
+        // Add Git integration commands
+        this.addCommand({
+            id: 'view-github-prs',
+            name: 'View GitHub Pull Requests',
+            checkCallback: (checking: boolean) => {
+                if (!this.settings.gitSettings.githubToken) return false;
+                if (!checking) {
+                    this.viewGitHubPRs();
+                }
+                return true;
+            }
+        });
+
+        this.addCommand({
+            id: 'view-gitlab-mrs',
+            name: 'View GitLab Merge Requests',
+            checkCallback: (checking: boolean) => {
+                if (!this.settings.gitSettings.gitlabToken || !this.settings.gitSettings.gitlabUrl) return false;
+                if (!checking) {
+                    this.viewGitLabMRs();
+                }
+                return true;
+            }
+        });
+
+        // Add Git menu to the editor context menu
+        this.registerEvent(
+            this.app.workspace.on('editor-menu', (menu, editor) => {
+                menu.addItem((item) => {
+                    item
+                        .setTitle('Git Integration')
+                        .setIcon('git-pull-request')
+                        .onClick(() => {
+                            const gitMenu = new Modal(this.app);
+                            
+                            if (this.settings.gitSettings.githubToken) {
+                                gitMenu.contentEl.createEl('button', {
+                                    text: 'View GitHub Pull Requests',
+                                    cls: 'git-result-item',
+                                    attr: { 'data-url': 'github' }
+                                }).addEventListener('click', () => {
+                                    this.viewGitHubPRs();
+                                });
+                            }
+                            
+                            if (this.settings.gitSettings.gitlabToken && this.settings.gitSettings.gitlabUrl) {
+                                gitMenu.contentEl.createEl('button', {
+                                    text: 'View GitLab Merge Requests',
+                                    cls: 'git-result-item',
+                                    attr: { 'data-url': 'gitlab' }
+                                }).addEventListener('click', () => {
+                                    this.viewGitLabMRs();
+                                });
+                            }
+                            
+                            gitMenu.open();
+                        });
+                });
             })
         );
     }
@@ -244,27 +307,31 @@ export default class EmojiChecklistPlugin extends Plugin {
 
             // Create suggester with more robust error handling
             try {
-                const suggester = new JiraTaskSuggester(this.app, tasks, (selectedTask) => {
-                    console.log('Task selected:', selectedTask);
-                    const editor = activeView.editor;
-                    const cursor = editor.getCursor();
-                    const triggerWord = this.settings.jiraSettings.triggerWord;
-                    const currentLine = editor.getLine(cursor.line);
+                const suggester = new JiraTaskSuggester(
+                    this.app,
+                    tasks,
+                    (selectedTask) => {
+                        console.log('Task selected:', selectedTask);
+                        const editor = activeView.editor;
+                        const cursor = editor.getCursor();
+                        const triggerWord = this.settings.jiraSettings.triggerWord;
+                        const currentLine = editor.getLine(cursor.line);
 
-                    // Remove the trigger word and replace with the task
-                    const newLine = currentLine.slice(0, cursor.ch - triggerWord.length) +
-                                  `[${selectedTask.key}: ${selectedTask.summary}](${selectedTask.url}) (${selectedTask.status})` +
-                                  currentLine.slice(cursor.ch);
+                        // Remove the trigger word and replace with the task
+                        const newLine = currentLine.slice(0, cursor.ch - triggerWord.length) +
+                                      `[${selectedTask.key}: ${selectedTask.summary}](${selectedTask.url}) (${selectedTask.status})` +
+                                      currentLine.slice(cursor.ch);
 
-                    // Replace the current line
-                    editor.setLine(cursor.line, newLine);
+                        // Replace the current line
+                        editor.setLine(cursor.line, newLine);
 
-                    // Move cursor to end of inserted text
-                    editor.setCursor({
-                        line: cursor.line,
-                        ch: cursor.ch - triggerWord.length + `[${selectedTask.key}: ${selectedTask.summary}](${selectedTask.url}) (${selectedTask.status})`.length
-                    });
-                });
+                        // Move cursor to end of inserted text
+                        editor.setCursor({
+                            line: cursor.line,
+                            ch: cursor.ch - triggerWord.length + `[${selectedTask.key}: ${selectedTask.summary}](${selectedTask.url}) (${selectedTask.status})`.length
+                        });
+                    }
+                );
 
                 // Additional logging to verify suggester creation
                 console.log('Suggester created:', suggester);
@@ -276,6 +343,101 @@ export default class EmojiChecklistPlugin extends Plugin {
             console.error('Error in handleJiraTrigger:', error);
             new Notice(error.message || 'Error fetching Jira tasks');
         }
+    }
+
+    private async viewGitHubPRs() {
+        try {
+            const gitIntegration = new GitIntegration(this.settings.gitSettings);
+            const prs = await gitIntegration.getAllGitHubPRs();
+            if (!prs || prs.length === 0) {
+                new Notice('No open pull requests found');
+                return;
+            }
+
+            const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+            if (!activeView) {
+                new Notice('No active markdown view');
+                return;
+            }
+
+            new GitMergeRequestSuggester(
+                this.app,
+                document.createElement('input'),
+                gitIntegration,
+                prs,
+                (selectedPR) => {
+                    const editor = activeView.editor;
+                    const linkText = `[${selectedPR.title}](${selectedPR.html_url || selectedPR.web_url})`;
+                    editor.replaceSelection(linkText);
+                    new Notice('Pull request link inserted');
+                }
+            );
+        } catch (error) {
+            new Notice('Error fetching GitHub PRs: ' + error.message);
+            console.error('Error fetching GitHub PRs:', error);
+        }
+    }
+
+    private async viewGitLabMRs() {
+        try {
+            const gitIntegration = new GitIntegration(this.settings.gitSettings);
+            const mrs = await gitIntegration.getAllGitLabMRs();
+            if (!mrs || mrs.length === 0) {
+                new Notice('No open merge requests found');
+                return;
+            }
+
+            const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+            if (!activeView) {
+                new Notice('No active markdown view');
+                return;
+            }
+
+            new GitMergeRequestSuggester(
+                this.app,
+                document.createElement('input'),
+                gitIntegration,
+                mrs,
+                (selectedMR) => {
+                    const editor = activeView.editor;
+                    const linkText = `[${selectedMR.title}](${selectedMR.html_url || selectedMR.web_url})`;
+                    editor.replaceSelection(linkText);
+                    new Notice('Merge request link inserted');
+                }
+            );
+        } catch (error) {
+            new Notice('Error fetching GitLab MRs: ' + error.message);
+            console.error('Error fetching GitLab MRs:', error);
+        }
+    }
+
+    private async promptForRepository(type: 'github' | 'gitlab' = 'github'): Promise<string | null> {
+        return new Promise((resolve) => {
+            const gitIntegration = new GitIntegration(this.settings.gitSettings);
+            const inputEl = document.createElement('input');
+            inputEl.type = 'text';
+            inputEl.placeholder = type === 'github' 
+                ? "Search GitHub pull requests..." 
+                : "Search GitLab merge requests...";
+
+            new GitMergeRequestSuggester(
+                this.app,
+                inputEl,
+                gitIntegration,
+                undefined,
+                (selectedPR: GitMergeRequest) => {
+                    const repoUrl = selectedPR.web_url || selectedPR.html_url || '';
+                    try {
+                        const urlObj = new URL(repoUrl);
+                        const pathParts = urlObj.pathname.split('/');
+                        resolve(`${pathParts[1]}/${pathParts[2]}`);
+                    } catch (error) {
+                        console.error('Error extracting repo path:', error);
+                        resolve(null);
+                    }
+                }
+            );
+        });
     }
 
     async loadSettings() {

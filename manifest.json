@@ -3,8 +3,11 @@
   "name": "Emoji Checklist",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
-  "description": "Replace checkboxes with configurable emojis",
+  "description": "Replace checkboxes with configurable emojis and integrate with GitLab/GitHub merge requests",
   "author": "Hackroot",
   "isDesktopOnly": false,
-  "js": "main.js"
+  "js": "main.js",
+  "fundingUrl": {
+    "GitHub Sponsor": "https://github.com/sponsors/hackroot"
+  }
 }

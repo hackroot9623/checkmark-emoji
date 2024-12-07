@@ -77,37 +77,42 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
     }
 
     display(): void {
-        const { containerEl } = this;
+        const {containerEl} = this;
         containerEl.empty();
 
-        containerEl.createEl('h2', { text: 'Emoji Checklist Settings' });
+        containerEl.createEl('h2', {text: 'Emoji Checklist Settings'});
+
+        // Add test section
+        this.testEl = containerEl.createDiv();
+        this.updateTestSection();
+
+        // Basic Settings
+        containerEl.createEl('h3', {text: 'Basic Settings'});
 
         new Setting(containerEl)
             .setName('Default Unchecked Emoji')
-            .setDesc('Emoji to display for unchecked tasks')
+            .setDesc('Emoji to use for unchecked tasks')
             .addText(text => text
+                .setPlaceholder('⬜️')
                 .setValue(this.plugin.settings.uncheckedEmoji)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.uncheckedEmoji = value;
-                    await this.plugin.saveSettings();
                     this.updateTestSection();
-                    console.log('Updated default unchecked emoji:', this.plugin.settings.uncheckedEmoji);
                 }));
 
         new Setting(containerEl)
             .setName('Default Checked Emoji')
-            .setDesc('Emoji to display for checked tasks')
+            .setDesc('Emoji to use for checked tasks')
             .addText(text => text
+                .setPlaceholder('✅')
                 .setValue(this.plugin.settings.checkedEmoji)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.checkedEmoji = value;
-                    await this.plugin.saveSettings();
                     this.updateTestSection();
-                    console.log('Updated default checked emoji:', this.plugin.settings.checkedEmoji);
                 }));
 
-        containerEl.createEl('h3', { text: 'Tag Mappings' });
-
+        // Tag Mappings
+        containerEl.createEl('h3', {text: 'Tag Mappings'});
         const tagMappingsContainer = containerEl.createDiv('tag-mappings');
 
         // Add existing tag mappings
@@ -119,81 +124,55 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
                 .addText(text => text
                     .setPlaceholder('tag name')
                     .setValue(mapping.tag)
-                    .onChange(async (value) => {
+                    .onChange((value) => {
                         this.plugin.settings.tagMappings[index].tag = value;
-                        await this.plugin.saveSettings();
                         this.updateTestSection();
-                        console.log('Updated tag mapping:', this.plugin.settings.tagMappings);
                     }))
                 .addText(text => text
                     .setPlaceholder('unchecked emoji')
                     .setValue(mapping.uncheckedEmoji)
-                    .onChange(async (value) => {
+                    .onChange((value) => {
                         this.plugin.settings.tagMappings[index].uncheckedEmoji = value;
-                        await this.plugin.saveSettings();
                         this.updateTestSection();
-                        console.log('Updated tag mapping:', this.plugin.settings.tagMappings);
                     }))
                 .addText(text => text
                     .setPlaceholder('checked emoji')
                     .setValue(mapping.checkedEmoji)
-                    .onChange(async (value) => {
+                    .onChange((value) => {
                         this.plugin.settings.tagMappings[index].checkedEmoji = value;
-                        await this.plugin.saveSettings();
                         this.updateTestSection();
-                        console.log('Updated tag mapping:', this.plugin.settings.tagMappings);
                     }))
                 .addButton(button => button
                     .setIcon('trash')
-                    .onClick(async () => {
+                    .onClick(() => {
                         this.plugin.settings.tagMappings.splice(index, 1);
-                        await this.plugin.saveSettings();
                         this.display();
-                        console.log('Removed tag mapping, remaining:', this.plugin.settings.tagMappings);
                     }));
         });
 
-        // Button to add new tag mapping
-        new Setting(containerEl)
-            .setName('Add Tag Mapping')
-            .setDesc('Add a new tag-emoji mapping')
+        // Add New Tag Mapping button
+        new Setting(tagMappingsContainer)
             .addButton(button => button
-                .setButtonText('Add New Tag')
-                .onClick(async () => {
+                .setButtonText('Add Tag Mapping')
+                .onClick(() => {
                     this.plugin.settings.tagMappings.push({
-                        tag: 'newtag',
-                        uncheckedEmoji: '⭕',
-                        checkedEmoji: '✅'
+                        tag: '',
+                        uncheckedEmoji: '',
+                        checkedEmoji: ''
                     });
-                    await this.plugin.saveSettings();
-                    console.log('Added new tag mapping:', this.plugin.settings.tagMappings);
                     this.display();
                 }));
 
-        new Setting(containerEl)
-            .setName('Reset Settings')
-            .setDesc('Restore all settings to their defaults')
-            .addButton(button => button
-                .setButtonText('Restore Defaults')
-                .onClick(async () => {
-                    this.plugin.settings = Object.assign({}, DEFAULT_SETTINGS);
-                    await this.plugin.saveSettings();
-                    console.log('Reset settings to defaults:', this.plugin.settings);
-                    this.display();
-                    new Notice('Settings restored to defaults');
-                }));
-
-        // Jira Settings
-        containerEl.createEl('h3', { text: 'Jira Integration' });
+        // Jira Integration Settings
+        containerEl.createEl('h3', {text: 'Jira Integration'});
 
         new Setting(containerEl)
             .setName('Enable Jira Integration')
-            .setDesc('Enable or disable Jira integration')
+            .setDesc('Enable/disable Jira integration')
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.jiraSettings.enabled)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.jiraSettings.enabled = value;
-                    await this.plugin.saveSettings();
                 }));
 
         new Setting(containerEl)
@@ -202,9 +181,8 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
             .addText(text => text
                 .setPlaceholder('@jira')
                 .setValue(this.plugin.settings.jiraSettings.triggerWord)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.jiraSettings.triggerWord = value;
-                    await this.plugin.saveSettings();
                 }));
 
         new Setting(containerEl)
@@ -213,9 +191,8 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
             .addText(text => text
                 .setPlaceholder('https://your-domain.atlassian.net')
                 .setValue(this.plugin.settings.jiraSettings.baseUrl)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.jiraSettings.baseUrl = value;
-                    await this.plugin.saveSettings();
                 }));
 
         new Setting(containerEl)
@@ -224,9 +201,8 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
             .addText(text => text
                 .setPlaceholder('email@example.com')
                 .setValue(this.plugin.settings.jiraSettings.username)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.jiraSettings.username = value;
-                    await this.plugin.saveSettings();
                 }));
 
         new Setting(containerEl)
@@ -235,9 +211,41 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
             .addText(text => text
                 .setPlaceholder('Enter your API token')
                 .setValue(this.plugin.settings.jiraSettings.apiToken)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.jiraSettings.apiToken = value;
-                    await this.plugin.saveSettings();
+                }));
+
+        // Git Integration Settings
+        containerEl.createEl('h3', {text: 'Git Integration'});
+
+        new Setting(containerEl)
+            .setName('GitHub Token')
+            .setDesc('Your GitHub personal access token')
+            .addText(text => text
+                .setPlaceholder('ghp_...')
+                .setValue(this.plugin.settings.gitSettings.githubToken)
+                .onChange((value) => {
+                    this.plugin.settings.gitSettings.githubToken = value;
+                }));
+
+        new Setting(containerEl)
+            .setName('GitLab Token')
+            .setDesc('Your GitLab personal access token')
+            .addText(text => text
+                .setPlaceholder('glpat-...')
+                .setValue(this.plugin.settings.gitSettings.gitlabToken)
+                .onChange((value) => {
+                    this.plugin.settings.gitSettings.gitlabToken = value;
+                }));
+
+        new Setting(containerEl)
+            .setName('GitLab URL')
+            .setDesc('Your GitLab instance URL (e.g., https://gitlab.com)')
+            .addText(text => text
+                .setPlaceholder('https://gitlab.com')
+                .setValue(this.plugin.settings.gitSettings.gitlabUrl)
+                .onChange((value) => {
+                    this.plugin.settings.gitSettings.gitlabUrl = value;
                 }));
 
         // Report Settings
@@ -248,9 +256,8 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
             .setDesc('Enable/disable the report formatting feature')
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.reportSettings.enabled)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.reportSettings.enabled = value;
-                    await this.plugin.saveSettings();
                 }));
 
         new Setting(containerEl)
@@ -258,9 +265,8 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
             .setDesc('Show/hide section headers in the report')
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.reportSettings.showHeaders)
-                .onChange(async (value) => {
+                .onChange((value) => {
                     this.plugin.settings.reportSettings.showHeaders = value;
-                    await this.plugin.saveSettings();
                 }));
 
         // Section Settings
@@ -276,23 +282,20 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
                 .setDesc('Configure this section')
                 .addToggle(toggle => toggle
                     .setValue(section.enabled)
-                    .onChange(async (value) => {
+                    .onChange((value) => {
                         section.enabled = value;
-                        await this.plugin.saveSettings();
                     }))
                 .addToggle(toggle => toggle
                     .setTooltip('Show section header')
                     .setValue(section.showHeader)
-                    .onChange(async (value) => {
+                    .onChange((value) => {
                         section.showHeader = value;
-                        await this.plugin.saveSettings();
                     }))
                 .addText(text => text
                     .setPlaceholder('Section content')
                     .setValue(section.content)
-                    .onChange(async (value) => {
+                    .onChange((value) => {
                         section.content = value;
-                        await this.plugin.saveSettings();
                     }));
         }
 
@@ -302,28 +305,29 @@ export class EmojiChecklistSettingTab extends PluginSettingTab {
             .setDesc('Add a new section to the report')
             .addButton(button => button
                 .setButtonText('Add Section')
-                .onClick(async () => {
+                .onClick(() => {
                     this.plugin.settings.reportSettings.sections.push({
                         name: 'New Section',
                         content: '',
                         enabled: true,
                         showHeader: true
                     });
-                    await this.plugin.saveSettings();
                     this.display();
                 }));
 
-        // Add Apply Changes button
+        // Apply All Settings button
+        containerEl.createEl('h3', {text: 'Save Changes'});
+        
         new Setting(containerEl)
-            .setName('Apply Changes')
-            .setDesc('Apply emoji changes to all open notes')
+            .setName('Apply All Settings')
+            .setDesc('Save all changes made to the settings')
             .addButton(button => button
-                .setButtonText('Apply Changes')
-                .onClick(() => {
+                .setButtonText('Apply')
+                .setCta()
+                .onClick(async () => {
+                    await this.plugin.saveSettings();
+                    new Notice('All settings have been saved');
                     this.plugin.refreshAllNotes();
                 }));
-
-        this.testEl = containerEl.createDiv();
-        this.updateTestSection();
     }
 }

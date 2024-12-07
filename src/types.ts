@@ -25,12 +25,19 @@ export interface ReportSettings {
     showHeaders: boolean;
 }
 
+export interface GitSettings {
+    githubToken: string;
+    gitlabToken: string;
+    gitlabUrl: string;
+}
+
 export interface EmojiChecklistSettings {
     checkedEmoji: string;
     uncheckedEmoji: string;
     tagMappings: TagEmojiMapping[];
     jiraSettings: JiraSettings;
     reportSettings: ReportSettings;
+    gitSettings: GitSettings;
 }
 
 export const DEFAULT_SETTINGS: EmojiChecklistSettings = {
@@ -79,5 +86,10 @@ export const DEFAULT_SETTINGS: EmojiChecklistSettings = {
                 showHeader: true
             }
         ]
+    },
+    gitSettings: {
+        githubToken: '',
+        gitlabToken: '',
+        gitlabUrl: ''
     }
 };
